@@ -2,28 +2,41 @@ package Util;
 
 import java.util.Arrays;
 
+/**
+ * A tool for binary data encoding
+ * @author Tianhui Liu
+ */
 public class BinaryEncodingTool {
-	String output;
+	private String output;
 	/**
-	 * 
+	 * Constructor 
 	 * @param input e.g. "01110100" will get you a "t"
 	 */
 	public BinaryEncodingTool(String input) {
-		StringBuilder sb = new StringBuilder(); // Some place to store the chars
-
-		Arrays.stream(input.split("(?<=\\G.{8})") // Splits the input string into 8-char-sections (Since a char has 8 bits = 1 byte)
-		).forEach(s -> // Go through each 8-char-section...
-		    sb.append((char) Integer.parseInt(s, 2)) // ...and turn it into an int and then to a char
+		StringBuilder sb = new StringBuilder(); 
+		//Split the input by every 8 bits
+		Arrays.stream(input.split("(?<=\\G.{8})")
+		)//Iterate over all the 8 bit pieces
+		.forEach(
+			// Encode the 8-bit pieces and append to string builder
+			s -> sb.append((char) Integer.parseInt(s, 2)) 
 		);
-
-		String output = sb.toString(); // Output text (t)
+		
+		//Output the 
+		String output = sb.toString(); 
 		this.output = output;
 	}
 	
+	/**
+	 * Return encoded string
+	 */
 	public String write() {
 		return output;
 	}
 	
+	/**
+	 * A test example
+	 */
 	public static void tryHandShankMsg() {
 		// This is a sample for our handshake message
 		String binaryString = "0101000000110010"
@@ -45,6 +58,7 @@ public class BinaryEncodingTool {
 		BinaryEncodingTool bet = new BinaryEncodingTool(binaryString);
 		System.out.println(String.format("Encoded String: %s", bet.write()));
 	}
+	
 	public static void main(String[] args) {
 		tryHandShankMsg();
 	}

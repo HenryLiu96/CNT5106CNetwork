@@ -16,7 +16,7 @@ public class P2PLogger extends Logger {
 	// Default relative configuration directory
 	private static final String CONFIG_DIR = "\\Config";
 	// Default configuration file name
-	private static final String LOGGER_CONFIG = "\\Logger1.config";
+	private static final String LOGGER_CONFIG = "\\Logger.config";
 	
 	//Error message
 //	private static final String CONFIG_LOAD_FAILURE = "Cannot load assigned"

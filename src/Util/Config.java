@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.Set;
 
 public class Config {
 	// Legal suffix
@@ -57,6 +58,26 @@ public class Config {
 	}
 	
 	/**
+	 * Returns true if the props loaded contains 
+	 * the corresponding key.
+	 * @param key
+	 * @return 
+	 * @throws Exception
+	 */
+	public boolean containsKey(String key) throws Exception {
+		boolean isContained = false;
+		
+		if(!this.initialized) {
+			throw new Exception(ERR_INITIALIZATION);
+		}
+		
+		Set<Object> keyset = this.prop.keySet();
+		isContained = keyset.contains(key);
+		
+		return isContained;
+	}
+	
+	/**
 	 * Input property name, return integer.
 	 * @param key
 	 * @throws Exception
@@ -105,6 +126,15 @@ public class Config {
 		}
 		throw new Exception(
 				String.format("Cannot get String with key[%s].", key));
+	}
+	
+	/**
+	 * For testing convenience
+	 */
+	public void showMenu() {
+		for(Object o: this.prop.keySet()) {
+			System.out.println(o.toString());
+		}
 	}
 	
 	public static void main(String[] args) throws Exception {

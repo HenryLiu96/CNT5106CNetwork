@@ -249,7 +249,7 @@ public class Client {
 	 * @throws ClassNotFoundException
 	 * @throws IOException
 	 */
-	public String extracMessage() throws ClassNotFoundException, IOException {
+	public String extractMessage() throws ClassNotFoundException, IOException {
 		String message = (String)objIn.readObject();
 		return message;
 	}
