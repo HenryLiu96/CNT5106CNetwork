@@ -61,8 +61,11 @@ public class Logger{
 	}
 	
 	public void setPrefix(String prefix) {
-		//TODO Check is valid peerID
 		this.prefix = prefix;
+	}
+	
+	public void setfilePath(String fileDir) {
+		this.fileDir = fileDir;
 	}
 	
 	/**
@@ -150,8 +153,9 @@ public class Logger{
 	/**
 	 * Append error message to String buffer.
 	 * @param e
+	 * @throws Exception 
 	 */
-	public void logError(Exception e) {
+	public void logError(Exception e) throws Exception {
 		// Format the dayTime to configured format.
 		LocalDateTime now = LocalDateTime.now();  
 		DateTimeFormatter dtFormat = DateTimeFormatter
@@ -160,7 +164,7 @@ public class Logger{
 		
 		// If peer Information is given, also append to the buffer
 		if(!this.prefix.isBlank()) {
-			this.sb.append(String.format("Peer: [%s]", prefix));
+			this.sb.append(String.format("[%s]", prefix));
 		}
 		
 		// Make log file like[21/10/2022 17:40:35] ERROR: Here is a example log.
@@ -169,6 +173,7 @@ public class Logger{
 		// Append detailed error message to the String buffer.
 		String s = e.getMessage();
 		this.sb.append(s+"\n");
+		this.log();
 	}
 	
 	/**
