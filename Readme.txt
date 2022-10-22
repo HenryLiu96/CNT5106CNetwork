@@ -1,3 +1,5 @@
+Project repository for CNT5106C
+
 This group is consisted of three members
 
 Tianhui Liu [Tianhui.Liu@ufl.edu]
