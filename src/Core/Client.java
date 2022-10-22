@@ -1,6 +1,10 @@
 package Core;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -12,8 +16,15 @@ import Util.Config;
 public class Client {
 	private static boolean VERBOSE = false;
 	
-	Socket requestSocket;
-	P2PLogger logger;
+	private Socket requestSocket;
+	private P2PLogger logger;
+	
+	//Declare output and input streams
+	private OutputStream reqOut = null;
+	private ObjectOutputStream objOut = null;
+	private InputStream reqIn = null;
+	private ObjectInputStream objIn = null;
+	
 	// TODO Fixed value 6001 for early stage testing, switch to read 
 	// configuration file to get later
 	private int port = 6001; 
@@ -37,7 +48,8 @@ public class Client {
 			                     "Failure in retrieving the host components.";
 	private static final String ERR_ILLEGAL_PORT_NUM =
 									   "The extracted port value is illegal!";
-	
+	private static final String ERR_STREAM_NOT_READY = 
+										   "Connection Streams are not ready";
 	/**
 	 * Constructor
 	 * 
@@ -100,20 +112,41 @@ public class Client {
 		port = Integer.getInteger(portNum);
 		checkValidPort(port);
 		
-		String IDKWTF = infoFields[3];// TODO check what this fields later
 		//TODO check this field also.
-		
-		//Do field checks
+		String IDKWTF = infoFields[3];// TODO check what this fields later
 		
 		try {
 			// Create a socket to host with host name and port number
 			this.requestSocket = new Socket(peerHostName, port);
-		} catch (UnknownHostException e) {
+			// Log attempt to establish connection to host
+			logger.append(String.format("Attempt to connect [%s] at port[%d] "
+					                				, peerHostName, portNum));
+			logger.log();
+		}
+		catch (UnknownHostException e) {
 			logger.logError(e);
 			e.printStackTrace();
-		} catch (IOException e) {
+		} 
+		catch (IOException e) {
 			logger.logError(e);
 			e.printStackTrace();
+		}
+		
+		try {
+			// Initialize output streams
+			reqOut = requestSocket.getOutputStream();
+			objOut = new ObjectOutputStream(reqOut);
+			
+			//Write object to the server welcome socket
+			objOut.flush();
+			
+			// Initialize input streams
+			reqIn = requestSocket.getInputStream();
+			objIn = new ObjectInputStream(reqIn);	
+		}catch(Exception e) {
+			logger.logError(e);
+			e.printStackTrace();
+			throw e;
 		}
 	}
 	
@@ -142,12 +175,12 @@ public class Client {
 	 * @param hostName
 	 * @throws URISyntaxException
 	 */
+	@SuppressWarnings("unused") //TODO release when final test
 	private void checkValidHostName(String hostName) throws URISyntaxException {
 		    URI uri = new URI(hostName);
 		    if (uri.getHost() == null) {
 		    	throw new URISyntaxException(ERR_HOST_COMPONET_FAILURE, hostName);
 		    }
-
 	}
 	
 	/**
@@ -170,21 +203,88 @@ public class Client {
 		}
 	}
 	
-	public static void main(String[] args) throws Exception {
+	/**
+	 * Close all the streams after everything is done.
+	 * 
+	 * @param args
+	 * @throws IOException 
+	 * @throws Exception
+	 */
+	public void killAllStreams() throws IOException {
+			if(objOut != null) {
+				objOut.close();
+			}
+			if(reqOut != null) {
+				reqOut.close();
+			}
+			if(objIn != null) {
+				objIn.close();
+			}
+			if(reqIn != null) {
+				reqIn.close();
+			}
+	}
+	
+	/**
+	 * Send byte stream to the server
+	 * @param msg
+	 * @throws Exception
+	 */
+	public void messageServer(P2PMessage msg) throws Exception {
+		// If any IO streams closed or not initialized, throw exception 
+		if(objOut==null
+				||reqOut == null
+				||objIn  == null 
+				||reqIn  == null ) 
+		{
+			throw new Exception(ERR_STREAM_NOT_READY);
+		}
+		this.objOut.write(msg.toBytes());
+	}
+	
+	/**
+	 * Encode the input stream to String instance
+	 * These instances can be encapsulated into P2PMessage for further processing
+	 * @return
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
+	public String extracMessage() throws ClassNotFoundException, IOException {
+		String message = (String)objIn.readObject();
+		return message;
+	}
+	
+	/**
+	 * Test for load configuration file and key set showing
+	 */
+	private static void test1() {
 		String workingDir = Paths.get("").toAbsolutePath().toString();
 		String cfgPath = workingDir.concat(CONFIG_DIR).concat(PEER_INFO);
 		Config config = new Config(cfgPath);
 		config.showMenu();
+	}
+	
+	/**
+	 * Test for peerInfo field extracting
+	 * @throws Exception
+	 */
+	private static void test2() throws Exception {
+		String workingDir = Paths.get("").toAbsolutePath().toString();
+		String cfgPath = workingDir.concat(CONFIG_DIR).concat(PEER_INFO);
+		Config config = new Config(cfgPath);
 		String peerID1 = "1001";
 		String peerID2 = "1002";
 		String peerID7 = "1007";
 		System.out.println(config.getString(peerID1));
 		System.out.println(config.containsKey(peerID2));
 		System.out.println(config.containsKey(peerID7));
-		System.out.println(config.getString(peerID1).split(" ")[0]);
-		System.out.println(config.getString(peerID1).split(" ")[1]);
-		System.out.println(config.getString(peerID1).split(" ")[2]);
-		
-		
+		System.out.println("HostName:"+config.getString(peerID1).split(" ")[0]);
+		System.out.println("Port："+config.getString(peerID1).split(" ")[1]);
+		System.out.println("?:"+config.getString(peerID1).split(" ")[2]);
+	}
+	
+	public static void main(String[] args) throws Exception {
+		test1();
+		test2();
 	}
 }
