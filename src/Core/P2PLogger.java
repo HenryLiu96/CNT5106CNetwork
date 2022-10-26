@@ -2,6 +2,8 @@ package Core;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import Util.Config;
 import Util.Logger;
@@ -67,6 +69,7 @@ public class P2PLogger extends Logger {
 	}
 	
 	public static void main(String[] args) throws Exception {
+//		List<Integer> a = new ArrayList<>();
 		String workingDir = Paths.get("").toAbsolutePath().toString();
 		String cfgDir = workingDir.concat(CONFIG_DIR);
 		
