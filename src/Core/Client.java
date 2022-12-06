@@ -27,7 +27,11 @@ public class Client {
 	
 	// TODO Fixed value 6001 for early stage testing, switch to read 
 	// configuration file to get later
-	private int port = 6001; 
+	private int port = 6001;
+
+
+	//NEW ADDING -- Liu
+	public int peerID;
 	
 	//Constants
 	// Default relative configuration directory
@@ -65,7 +69,7 @@ public class Client {
 		// Construct configuration file path to PeerInfo.cfg
 		String workingDir = Paths.get("").toAbsolutePath().toString();
 		String cfgPath = workingDir.concat(CONFIG_DIR).concat(PEER_INFO);
-		
+		this.peerID = Integer.parseInt(peerID);
 		// Load properties
 		Config config = null;
 		try 
@@ -205,8 +209,7 @@ public class Client {
 	
 	/**
 	 * Close all the streams after everything is done.
-	 * 
-	 * @param args
+	 *
 	 * @throws IOException 
 	 * @throws Exception
 	 */
@@ -253,6 +256,19 @@ public class Client {
 		String message = (String)objIn.readObject();
 		return message;
 	}
+
+	public void sendMessage(byte[] realMessage, int peerID){
+
+	}
+
+	public void receiveMessage(byte[] realMessage, int peerID){
+
+
+	}
+
+
+
+
 	
 	/**
 	 * Test for load configuration file and key set showing
