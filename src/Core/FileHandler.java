@@ -2,10 +2,6 @@ package Core;
 
 import java.io.*;
 
-//TODO delete if no use
-//import controller.ArgReader;
-//import model.PeerInfo;
-
 public class FileHandler {
     private String filePath;
     private File file;
@@ -38,7 +34,7 @@ public class FileHandler {
     //read piece from the file and send as bytes
     public byte[] read(int index, int peerID) {
         try {
-            String path = peerID + "/" + ServerThreadPool.file_name;
+            String path = "./" + peerID + "/" + ServerThreadPool.file_name;
             File cur = new File(path);
             RandomAccessFile input = new RandomAccessFile(cur, "r");
             input.seek(index * ServerThreadPool.piece_size);
@@ -67,7 +63,7 @@ public class FileHandler {
 
     synchronized public void write(int index, byte[] data, int peerID) {
         try {
-            String path = peerID + "/" + ServerThreadPool.file_name;
+            String path = "./" + peerID + "/" + ServerThreadPool.file_name;
             File cur = new File(path);
             RandomAccessFile output = new RandomAccessFile(cur, "rw");
             output.seek(index * ServerThreadPool.piece_size);
@@ -80,10 +76,8 @@ public class FileHandler {
     }
 
 
-    //if receive completed file, rename the file to filePath
-    public void renameTemp() {
-        File completedFile = new File(filePath);
-        file.renameTo(completedFile);
-        file = completedFile;
+    public static void main(String[] args){
+       //test set, read, write methods
+
     }
 }

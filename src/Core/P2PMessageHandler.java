@@ -195,8 +195,6 @@ public class P2PMessageHandler {
         int curIndex = msg.getIndex();
         byte[] curPayload = msg.getPayload();
         fh.write(curIndex, curPayload, client.peerID);
-        //TODO download file and save it
-
 
         //update bitfield
         int[] curBitField = peerBitField.get(client.peerID);
@@ -204,7 +202,6 @@ public class P2PMessageHandler {
             curBitField[curIndex] = 1;
             downloadingNum[client.peerID][senderID]++;
         }
-
 
         //randomly select peers to send have message
         //nextint generate a random integer from 0 to n - 1. so receiverID add one
@@ -214,23 +211,8 @@ public class P2PMessageHandler {
             receiverID = r.nextInt(peerBitField.size()) + 1;
         }
         sendHave(client, curIndex, receiverID);
-
-
     }
 
-
-    // Convert Integer to Byte array
-    public static byte[] convertIntToByte(int num){
-        return ByteBuffer.allocate(4).putInt(num).array();
-    }
-
-    // Convert Byte array to Integer
-    public static int convertByteToInt(byte[] bytes){
-        return ByteBuffer.wrap(bytes).getInt();
-    }
-
-
-    // Convert
 
     public static void main(String[] args){
 //        byte[] test = convertIntToByte(1231);

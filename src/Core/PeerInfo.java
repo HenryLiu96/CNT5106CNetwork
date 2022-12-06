@@ -30,5 +30,8 @@ public class PeerInfo {
     public Boolean getHasFile() {
         return hasFile;
     }
+    public void setHasFile(boolean hasFile){
+        this.hasFile = hasFile;
+    }
 
 }

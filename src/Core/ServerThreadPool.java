@@ -17,9 +17,9 @@ public class ServerThreadPool {
 	public static int k = 4;				// Number of Preferred neighbor
 	public static int p = 6;				// Number of sec before repicking PN
 	public static int m = 12;				// Number of sec before repicking optimistic unchoking neighbor
-	public static String file_name = "";	// Name of the file
-	public static int file_size = 0;		// File size
-	public static int piece_size = 0;		// Piece size
+	public static String file_name = "f";	// Name of the file
+	public static int file_size = 100;		// File size
+	public static int piece_size = 10;		// Piece size
 
 
 	/**Initialization of Thread pool

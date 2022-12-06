@@ -32,11 +32,9 @@ public class P2PMessage {
 	private int index;
 	private String bitField;
 	private byte[] payload;
+	private int numOfPiece;
 
-	//TODO read file size and piece size from config
-	final int fileSize = 2167705;
-	final int pieceSize = 16384;
-	final int numOfPiece = fileSize / pieceSize + 1;
+
 
 	// Constructor
 	public P2PMessage() {
@@ -91,17 +89,17 @@ public class P2PMessage {
 	}
 	
 	// Build the piece payload according to the index requested
-	public String buildPiece(String index) {
-		StringBuffer sb = new StringBuffer();
-
-		//transfer index from binary to decimal
-		int i = Integer.parseInt(index, 2);
-		//TODO retrieve content of corresponding index
-
-		String pieceContent = "";
-		this.msgLength += pieceContent.length();
-		return index + pieceContent;
-	}
+//	public String buildPiece(String index) {
+//		StringBuffer sb = new StringBuffer();
+//
+//		//transfer index from binary to decimal
+//		int i = Integer.parseInt(index, 2);
+//		//TODO retrieve content of corresponding index
+//
+//		String pieceContent = "";
+//		this.msgLength += pieceContent.length();
+//		return index + pieceContent;
+//	}
 
 	public String buildBitField(Map<Integer, String> bitField){
 		return "";
@@ -139,17 +137,21 @@ public class P2PMessage {
 
 	// get total number of pieces
 	public int getNumOfPiece(){
+		this.numOfPiece = ServerThreadPool.file_size / ServerThreadPool.piece_size;
+		if(ServerThreadPool.file_size % ServerThreadPool.piece_size != 0){
+			numOfPiece++;
+		}
 		return numOfPiece;
 	}
 
 	// get file size
 	public int getFileSize(){
-		return fileSize;
+		return ServerThreadPool.file_size;
 	}
 
 	// get piece size
 	public int getPieceSize(){
-		return pieceSize;
+		return ServerThreadPool.piece_size;
 	}
 
 
@@ -184,6 +186,20 @@ public class P2PMessage {
 		return ByteBuffer.wrap(bytes).getInt();
 	}
 
+
+	/**
+	 * Combine two byte array as one
+	 * @return
+	 */
+	public byte[] combineBytes(byte[] b1, byte[] b2){
+		byte[] combined = new byte[b1.length + b2.length];
+		for(int i = 0; i < combined.length; i++){
+			combined[i] = i < b1.length ? b1[i] : b2[i - b1.length];
+		}
+		return combined;
+	}
+
+
 	/**
 	 *
 	 *
@@ -217,6 +233,7 @@ public class P2PMessage {
 			return combineBytes(lengthAndType, indexAndPayload);
 		} else{
 			//6 bitfield as string, combine with length and type
+			//TODO convert bitfield string to byte
 			byte[] payloadByte = bitFieldToBytes(bitField);
 			lengthByte = convertIntToByte(5 + payloadByte.length, 4);
 			return combineBytes(lengthByte, typeByte);
@@ -233,7 +250,6 @@ public class P2PMessage {
 		byte[] curTypeByte = Arrays.copyOfRange(realMessage, 4, 8);
 		int curTypeInt = convertByteToInt(curTypeByte);
 
-		//TODO check the type is valid, range from 1 - 8
 		P2PMessage receivedMessage = new P2PMessage();
 		if(curTypeInt == 1){
 			//receive chock
@@ -258,14 +274,7 @@ public class P2PMessage {
 
 
 
-	//combine two byte array as one
-	public byte[] combineBytes(byte[] b1, byte[] b2){
-		byte[] combined = new byte[b1.length + b2.length];
-		for(int i = 0; i < combined.length; i++){
-			combined[i] = i < b1.length ? b1[i] : b2[i - b1.length];
-		}
-		return combined;
-	}
+
 
 
 
