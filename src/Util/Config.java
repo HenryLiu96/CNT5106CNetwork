@@ -2,6 +2,7 @@ package Util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.Set;
@@ -138,12 +139,12 @@ public class Config {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		Config c = new Config("C:\\Users\\Tianhui Liu\\eclipse-workspace"
-							+ "\\CNT5106CNetwork\\src\\Core\\common.cfg");
+		Config c = new Config("./Config/common.cfg");
 		for(Object O: c.prop.keySet()) {
 			System.out.println((String)O);
 		}
 		System.out.println(c.getInt("PieceSize"));
 		System.out.println(c.getString("Hime"));
+
 	}
 }

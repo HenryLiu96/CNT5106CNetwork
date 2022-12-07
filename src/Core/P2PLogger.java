@@ -67,7 +67,13 @@ public class P2PLogger extends Logger {
 		//TODO check if peerID is in legal form
 		this.setPrefix(peerID);
 	}
-	
+
+
+	//TODO add message to log
+	public void addMessage(int peerID, String message){
+
+	}
+
 	public static void main(String[] args) throws Exception {
 //		List<Integer> a = new ArrayList<>();
 		String workingDir = Paths.get("").toAbsolutePath().toString();
