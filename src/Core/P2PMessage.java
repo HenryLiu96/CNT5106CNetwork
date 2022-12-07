@@ -87,24 +87,8 @@ public class P2PMessage {
 			return false;
 		return Integer.parseInt(s, 2) >= 0 && Integer.parseInt(s, 2) <= numOfPiece;
 	}
-	
-	// Build the piece payload according to the index requested
-//	public String buildPiece(String index) {
-//		StringBuffer sb = new StringBuffer();
-//
-//		//transfer index from binary to decimal
-//		int i = Integer.parseInt(index, 2);
-//		//TODO retrieve content of corresponding index
-//
-//		String pieceContent = "";
-//		this.msgLength += pieceContent.length();
-//		return index + pieceContent;
-//	}
 
-	public String buildBitField(Map<Integer, String> bitField){
-		return "";
-	}
-	
+
 	/**
 	 * Construct a string message with the three fields
 	 */
@@ -155,19 +139,12 @@ public class P2PMessage {
 	}
 
 
-	/**
-	 * Transform the String format to Bytes to be send by output stream
-	 * @return
-	 */
+
 	public byte[] bitFieldToBytes(String str) {
-		byte[] bytes = this.bitField.getBytes();
+		byte[] bytes = str.getBytes();
 		return bytes;
 	}
 
-	public byte[] toBytes(){
-		byte[] bytes = this.toString().getBytes();
-		return bytes;
-	}
 
 	/**
 	 * Transform the integer format to Bytes to be send by output stream
@@ -250,6 +227,7 @@ public class P2PMessage {
 		byte[] curTypeByte = Arrays.copyOfRange(realMessage, 4, 8);
 		int curTypeInt = convertByteToInt(curTypeByte);
 
+		//TODO transfer the real message to P2PMessage and using message handler
 		P2PMessage receivedMessage = new P2PMessage();
 		if(curTypeInt == 1){
 			//receive chock

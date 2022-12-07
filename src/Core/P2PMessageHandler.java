@@ -1,18 +1,20 @@
 package Core;
 
+import Util.TypeTransfer;
+
 import java.nio.ByteBuffer;
 import java.util.*;
 
 public class P2PMessageHandler {
 
-
     public int peerID;
     public static P2PLogger logger;
-    public List<Integer> neighbors = new ArrayList<>();
 
     //TODO move these field out of the class
     public List<Integer> preferredNeighbors = new ArrayList<>();
-    public static int[][] downloadingNum; // row is receiver and col is sender
+
+    public static int numOfNeighbors;
+    public static int[][] downloadingNum = new int[numOfNeighbors + 1][numOfNeighbors + 1]; // row is receiver and col is sender
     public int optUnchockedNeighbor;
     public static Map<Integer, Set<Integer>> interestedSet;
     public static Map<Integer, Set<Integer>> unchokepeers;
@@ -21,14 +23,8 @@ public class P2PMessageHandler {
 
     //constructor
     //assign the peerID and add neighbors in the list
-    public P2PMessageHandler(int numOfNeighbors, int peerID) {
+    public P2PMessageHandler(int peerID) {
         this.peerID = peerID;
-        for(int i = 0; i < numOfNeighbors; i++) {
-            if(i != peerID)
-                neighbors.add(i);
-        }
-        downloadingNum = new int[numOfNeighbors + 1][numOfNeighbors + 1];
-        Arrays.fill(downloadingNum, 0);
     }
 
     //send choke message
@@ -203,6 +199,8 @@ public class P2PMessageHandler {
             downloadingNum[client.peerID][senderID]++;
         }
 
+        //TODO send another request message to the sender
+
         //randomly select peers to send have message
         //nextint generate a random integer from 0 to n - 1. so receiverID add one
         Random r = new Random();
@@ -215,13 +213,8 @@ public class P2PMessageHandler {
 
 
     public static void main(String[] args){
-//        byte[] test = convertIntToByte(1231);
-//        for(int i = 0; i < test.length; i++){
-//            System.out.println(test[i]);
-//        }
-        Map<Integer, Set<Integer>> interest = new HashMap<>();
-        interest.computeIfAbsent(1,  x -> new HashSet<>()).add(2);
-        System.out.println(interest);
+        String str = "10001000";
+        System.out.println();
     }
 
 }
