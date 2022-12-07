@@ -26,7 +26,7 @@ public class P2PMessage {
 		request,
 		piece
 	}
-	
+
 	private int msgLength;
 	private msgType type;
 	private int index;
@@ -64,7 +64,7 @@ public class P2PMessage {
 		this.index = payloadIndex;
 		this.payload = payload;
 	}
-	
+
 	// Encode enumeration type to integer
 	public static int typeEncode(msgType type) {
 		Hashtable<msgType, Integer> typeDictionary = new Hashtable<msgType, Integer>();
@@ -78,7 +78,7 @@ public class P2PMessage {
 		typeDictionary.put(msgType.piece, 			8);
 		return typeDictionary.get(type);
 	}
-	
+
 	// To ensure the index sent will be in legal form
 	// request check at first
 	public boolean indexCheck(String s) {
@@ -268,7 +268,7 @@ public class P2PMessage {
 
 
 	//transfer bytes to P2PMessage and call handlers
-	public static P2PMessage byteToMessage(byte[] realMessage, int curPeerID, int senderID){
+	public static P2PMessage byteToMessage(byte[] realMessage, int curPeerID, int senderID) throws Exception {
 		//check type of the message
 		// 0 - 3 is the length of the message
 		// 4 is the type of the message
@@ -281,42 +281,50 @@ public class P2PMessage {
 		int lengthOfMessage = convertByteToInt(lengthByte);
 
 		P2PMessage receivedMessage;
+		P2PMessageHandler mh = new P2PMessageHandler(curPeerID);
 		if(curTypeInt == typeEncode(msgType.choke)){
 			//receive chock
 			receivedMessage = new P2PMessage(msgType.choke);
+			mh.receiveChoke(receivedMessage, senderID);
 		}else if (curTypeInt == typeEncode(msgType.unchoke)){
 			//receive unchocked
 			receivedMessage = new P2PMessage(msgType.unchoke);
+			mh.receiveUnchoke(receivedMessage, senderID);
 		}else if (curTypeInt == typeEncode(msgType.interested)){
 			// receive interested
 			receivedMessage = new P2PMessage(msgType.interested);
+			mh.receiveInterested(receivedMessage, senderID);
 		}else if (curTypeInt == typeEncode(msgType.notInterested)){
 			// receive not interested
 			receivedMessage = new P2PMessage(msgType.notInterested);
+			mh.receiveNotInterested(receivedMessage, senderID);
 		}else if (curTypeInt == typeEncode(msgType.have)){
 			// receive have message
 			byte[] curIndexByte = Arrays.copyOfRange(realMessage, 5, 9);
 			int curIndex = convertByteToInt(curIndexByte);
 			receivedMessage = new P2PMessage(msgType.have, curIndex);
+			mh.receiveHave(receivedMessage, senderID);
 		}else if (curTypeInt == typeEncode(msgType.bitField)){
 			// receive bitfield
 			byte[] curBitFieldByte = Arrays.copyOfRange(realMessage, 5, lengthOfMessage);
 			String curBitField = convertByteToBitField(curBitFieldByte);
 			receivedMessage = new P2PMessage(msgType.bitField, curBitField);
+			mh.receiveBitField(receivedMessage, senderID);
 		}else if (curTypeInt == typeEncode(msgType.request)){
 			//receive request message
 			byte[] curIndexByte = Arrays.copyOfRange(realMessage, 5, 9);
 			int curIndex = convertByteToInt(curIndexByte);
 			receivedMessage = new P2PMessage(msgType.request, curIndex);
+			mh.receiveRequest(receivedMessage, senderID);
 		}else{
 			//receive piece
 			byte[] curIndexByte = Arrays.copyOfRange(realMessage, 5, 9);
 			int curIndex = convertByteToInt(curIndexByte);
 			byte[] curPayload = Arrays.copyOfRange(realMessage, 9, lengthOfMessage);
 			receivedMessage = new P2PMessage(msgType.piece, curIndex, curPayload);
+			mh.receivePiece(receivedMessage, senderID);
 		}
-		//TODO figure out the parameter
-//		P2PMessageHandler.receiveInterested(receivedMessage, curPeerID, senderID);
+
 		return receivedMessage;
 	}
 
