@@ -106,6 +106,8 @@ public class P2PMessage {
 		return sb.toString();
 	}
 
+
+
 	// get index of the message
 	public int getIndex(){
 		return this.index;
@@ -139,15 +141,40 @@ public class P2PMessage {
 	}
 
 
-
-	public byte[] bitFieldToBytes(String str) {
-		byte[] bytes = str.getBytes();
+	/**
+	 * Transform the bitfield string format to byte
+	 * transfer each 8 character in bitfield string to 1 byte
+	 * spare bits at the end are set to zeros
+	 * @return
+	 */
+	public static byte[] convertBitFieldToByte(String str) {
+		int length = str.length() / 8;
+		if(str.length() % 8 != 0){
+			length++;
+		}
+		byte[] bytes = new byte[length];
+		for(int i = 0; i < str.length() / 8; i++){
+			int cur = Integer.parseInt(str.substring(i * 8, (i + 1) * 8), 2);
+			bytes[i] = (byte) cur;
+		}
+		//build the last string
+		if(str.length() % 8 != 0){
+			int numOfZeros = 8 - str.length() % 8;
+			String lastString = str.substring(8 * (str.length() / 8));
+			StringBuilder sb = new StringBuilder(lastString);
+			for(int i = 0; i < numOfZeros; i++){
+				sb.append('0');
+			}
+			String last = sb.toString();
+			int lastInt = Integer.parseInt(last, 2);
+			bytes[length - 1] = (byte)lastInt;
+		}
 		return bytes;
 	}
 
 
 	/**
-	 * Transform the integer format to Bytes to be send by output stream
+	 * Transform the integer format to Bytes to be sent by output stream
 	 * length is how many byte we want to convert to
 	 * @return
 	 */
@@ -162,6 +189,28 @@ public class P2PMessage {
 	public static int convertByteToInt(byte[] bytes){
 		return ByteBuffer.wrap(bytes).getInt();
 	}
+
+	/**
+	 * Transform the byte format to string
+	 * @return
+	 */
+	public static String convertByteToBitField(byte[] curBitFieldByte) {
+		int numOfPiece = ServerThreadPool.file_size / ServerThreadPool.piece_size;
+		if(ServerThreadPool.file_size % ServerThreadPool.piece_size != 0){
+			numOfPiece++;
+		}
+		int numOfZeros = curBitFieldByte.length * 8 - numOfPiece;
+		StringBuilder sb = new StringBuilder();
+		for(int i = 0; i < curBitFieldByte.length; i++){
+			int cur = curBitFieldByte[i] & 0xff;
+			sb.append(Integer.toBinaryString(cur));
+		}
+		for(int i = 0; i < numOfZeros; i++){
+			sb.deleteCharAt(sb.length() - 1);
+		}
+		return sb.toString();
+	}
+
 
 
 	/**
@@ -190,17 +239,17 @@ public class P2PMessage {
 		// 6 - bitfield has a 2D array as payload, length = ?
 		// 5 and 7 have piece index as payload, length = 5
 		// 8 - piece have piece index and piece content as payload, length = 5 + length of content
-		if(typeEncode(this.type) <= 4){
+		if(typeEncode(this.type) <= typeEncode(msgType.notInterested)){
 			// 1 - 4
 			lengthByte = convertIntToByte(1, 4);
 			return combineBytes(lengthByte, typeByte);
-		} else if(typeEncode(this.type) == 5 || typeEncode(this.type) == 7){
+		} else if(typeEncode(this.type) == typeEncode(msgType.have) || typeEncode(this.type) == typeEncode(msgType.request)){
 			// 5 and 7
 			lengthByte = convertIntToByte(5, 4);
 			byte[] lengthAndType = combineBytes(lengthByte, typeByte);
 			byte[] indexByte = convertIntToByte(this.index, 4);
 			return combineBytes(lengthAndType, indexByte);
-		} else if(typeEncode(this.type) == 8){
+		} else if(typeEncode(this.type) == typeEncode(msgType.piece)){
 			//8
 			byte[] payloadByte = this.payload;
 			lengthByte = convertIntToByte(5 + payloadByte.length, 4);
@@ -210,9 +259,8 @@ public class P2PMessage {
 			return combineBytes(lengthAndType, indexAndPayload);
 		} else{
 			//6 bitfield as string, combine with length and type
-			//TODO convert bitfield string to byte
-			byte[] payloadByte = bitFieldToBytes(bitField);
-			lengthByte = convertIntToByte(5 + payloadByte.length, 4);
+			byte[] bitFieldByte = convertBitFieldToByte(bitField);
+			lengthByte = convertIntToByte(5 + bitFieldByte.length, 4);
 			return combineBytes(lengthByte, typeByte);
 		}
 
@@ -220,42 +268,61 @@ public class P2PMessage {
 
 
 	//transfer bytes to P2PMessage and call handlers
-	public static P2PMessage byteToMessage(byte[] realMessage){
+	public static P2PMessage byteToMessage(byte[] realMessage, int curPeerID, int senderID){
 		//check type of the message
 		// 0 - 3 is the length of the message
-		// 4 - 7 is the type of the message
-		byte[] curTypeByte = Arrays.copyOfRange(realMessage, 4, 8);
+		// 4 is the type of the message
+		// 5 - 8 is the index of the piece for HAVE, REQUEST and PIECE
+		// 9 - end is the piece content of the message(payload)
+		// 5 - end is the bitfield for BITFIELD
+		byte[] curTypeByte = Arrays.copyOfRange(realMessage, 4, 5);
 		int curTypeInt = convertByteToInt(curTypeByte);
+		byte[] lengthByte = Arrays.copyOfRange(realMessage, 0, 4);
+		int lengthOfMessage = convertByteToInt(lengthByte);
 
-		//TODO transfer the real message to P2PMessage and using message handler
-		P2PMessage receivedMessage = new P2PMessage();
-		if(curTypeInt == 1){
+		P2PMessage receivedMessage;
+		if(curTypeInt == typeEncode(msgType.choke)){
 			//receive chock
-		}else if (curTypeInt == 2){
+			receivedMessage = new P2PMessage(msgType.choke);
+		}else if (curTypeInt == typeEncode(msgType.unchoke)){
 			//receive unchocked
-		}else if (curTypeInt == 3){
+			receivedMessage = new P2PMessage(msgType.unchoke);
+		}else if (curTypeInt == typeEncode(msgType.interested)){
 			// receive interested
-//			P2PMessageHandler.receiveInterested();
-		}else if (curTypeInt == 4){
+			receivedMessage = new P2PMessage(msgType.interested);
+		}else if (curTypeInt == typeEncode(msgType.notInterested)){
 			// receive not interested
-		}else if (curTypeInt == 5){
+			receivedMessage = new P2PMessage(msgType.notInterested);
+		}else if (curTypeInt == typeEncode(msgType.have)){
 			// receive have message
-		}else if (curTypeInt == 6){
+			byte[] curIndexByte = Arrays.copyOfRange(realMessage, 5, 9);
+			int curIndex = convertByteToInt(curIndexByte);
+			receivedMessage = new P2PMessage(msgType.have, curIndex);
+		}else if (curTypeInt == typeEncode(msgType.bitField)){
 			// receive bitfield
-		}else if (curTypeInt == 7){
+			byte[] curBitFieldByte = Arrays.copyOfRange(realMessage, 5, lengthOfMessage);
+			String curBitField = convertByteToBitField(curBitFieldByte);
+			receivedMessage = new P2PMessage(msgType.bitField, curBitField);
+		}else if (curTypeInt == typeEncode(msgType.request)){
 			//receive request message
+			byte[] curIndexByte = Arrays.copyOfRange(realMessage, 5, 9);
+			int curIndex = convertByteToInt(curIndexByte);
+			receivedMessage = new P2PMessage(msgType.request, curIndex);
 		}else{
 			//receive piece
+			byte[] curIndexByte = Arrays.copyOfRange(realMessage, 5, 9);
+			int curIndex = convertByteToInt(curIndexByte);
+			byte[] curPayload = Arrays.copyOfRange(realMessage, 9, lengthOfMessage);
+			receivedMessage = new P2PMessage(msgType.piece, curIndex, curPayload);
 		}
+		//TODO figure out the parameter
+//		P2PMessageHandler.receiveInterested(receivedMessage, curPeerID, senderID);
 		return receivedMessage;
 	}
 
 
 
-
-
-
-
 	public static void main(String[] args) {//Empty
+
 	}
 }

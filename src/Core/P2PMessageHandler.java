@@ -9,176 +9,244 @@ public class P2PMessageHandler {
 
     public int peerID;
     public static P2PLogger logger;
+    private Random r = new Random();
 
     //TODO move these field out of the class
     public List<Integer> preferredNeighbors = new ArrayList<>();
-
-    public static int numOfNeighbors;
-    public static int[][] downloadingNum = new int[numOfNeighbors + 1][numOfNeighbors + 1]; // row is receiver and col is sender
-    public int optUnchockedNeighbor;
+//
+//    public static int numOfNeighbors;
+//    public static int[][] downloadingNum = new int[numOfNeighbors + 1][numOfNeighbors + 1]; // row is receiver and col is sender
+//    public int optUnchockedNeighbor;
     public static Map<Integer, Set<Integer>> interestedSet;
     public static Map<Integer, Set<Integer>> unchokepeers;
-    public static Map<Integer, int[]> peerBitField = new HashMap<>();
-    public static int numOfPiece;
+//    public static Map<Integer, int[]> peerBitField = new HashMap<>();
+//    public static int numOfPiece;
 
     //constructor
-    //assign the peerID and add neighbors in the list
+    //assign the peerID
     public P2PMessageHandler(int peerID) {
         this.peerID = peerID;
     }
 
     //send choke message
-    public static void sendChoke(Client client, int receiverID){
-
+    public void sendChoke(int receiverID){
+        P2PMessage choke = new P2PMessage(P2PMessage.msgType.choke);
+        byte[] actualMessage = choke.messageToBytes();
+//        client.sendMessage(actualMessage, receiverID);
     }
 
     //receive choke message
-    public static void receiveChoke(P2PMessage msg, Client client, int senderID){
+    public void receiveChoke(P2PMessage msg, int senderID){
 
     }
 
     //send unchoke message
-    public static void sendUnchoke(Client client, int receiverID){
-
-
-        //send request
+    public void sendUnchoke(int receiverID){
+        P2PMessage unchoke = new P2PMessage(P2PMessage.msgType.unchoke);
+        byte[] actualMessage = unchoke.messageToBytes();
+//        client.sendMessage(actualMessage, receiverID);
     }
 
     //receive unchoke message
-    public static void receiveUnchoke(P2PMessage msg, Client client, int senderID){
-
+    public void receiveUnchoke(P2PMessage msg, int senderID) throws Exception {
+        boolean[] curBitField = ServerThreadPool.getStatusMap().getBitField(this.peerID);
+        boolean[] senderBitField = ServerThreadPool.getStatusMap().getBitField(senderID);
+        Set<Integer> notHave = new HashSet<>();
+        for(int i = 0; i < curBitField.length; i++){
+            if(senderBitField[i] && !curBitField[i]){
+                notHave.add(i);
+            }
+        }
+        if(notHave.size() > 0){
+            int target = r.nextInt(notHave.size());
+            int i = 0;
+            for(int index : notHave){
+                if(target == i){
+                    sendRequest(index, senderID);
+                    break;
+                }
+                i++;
+            }
+        }
     }
 
 
 
 
     //generate interested message and ask client to send interested message
-    public static void sendInterested(Client client, int receiverID) {
+    public void sendInterested(int receiverID) {
         P2PMessage interested = new P2PMessage(P2PMessage.msgType.interested);
         byte[] actualMessage = interested.messageToBytes();
-        client.sendMessage(actualMessage, receiverID);
+//        client.sendMessage(actualMessage, receiverID);
     }
 
     // receive interested message
-    public static void receiveInterested(P2PMessage msg, Client client, int senderID) {
+    public void receiveInterested(P2PMessage msg, int senderID) {
         //add sendID to the interested set
-        interestedSet.computeIfAbsent(client.peerID, x -> new HashSet<>()).add(senderID);
+        //TODO update interested list
+        interestedSet.computeIfAbsent(this.peerID, x -> new HashSet<>()).add(senderID);
     }
 
 
-    public static void sendNotInterested(Client client, int receiverID) {
+    public void sendNotInterested(int receiverID) {
         P2PMessage notInterested = new P2PMessage(P2PMessage.msgType.notInterested);
         byte[] actualMessage = notInterested.messageToBytes();
-        client.sendMessage(actualMessage, receiverID);
+        //client.sendMessage(actualMessage, receiverID);
     }
 
-    public static void receiveNotInterested(P2PMessage msg, Client client, int senderID) {
+    public void receiveNotInterested(P2PMessage msg, int senderID) {
         //remove sender from the interested set
-        interestedSet.get(client.peerID).remove(senderID);
+        //TODO update interested list
+        interestedSet.get(this.peerID).remove(senderID);
     }
 
 
     // send have message
     // have message include the length of the message, type, and index of the piece
-    public static void sendHave(Client client, int index, int receiverID){
+    public void sendHave(int index, int receiverID){
         P2PMessage have = new P2PMessage(P2PMessage.msgType.have, index);
         byte[] actualMessage = have.messageToBytes();
-        client.sendMessage(actualMessage, receiverID);
+        //client.sendMessage(actualMessage, receiverID);
     }
 
     // receive have message
-    public static void receiveHave(P2PMessage msg, Client client, int senderID) {
+    public void receiveHave(P2PMessage msg, int senderID) throws Exception {
         //check whether current bitfield has the index
-        int[] curBitField = peerBitField.get(client.peerID);
+        boolean[] curBitField = ServerThreadPool.getStatusMap().getBitField(this.peerID);
+//        int[] curBitField = peerBitField.get(this.peerID);
         int curIndex = msg.getIndex();
-
-        if(curBitField[curIndex] == 1){
-            sendNotInterested(client, senderID);
-        }else{
-            sendInterested(client, senderID);
+        //only send interested if current peer doesn't have the piece
+        //when receive a piece of file, check the bitfield, and decide whether send not interested
+        if(!curBitField[curIndex]){
+            sendInterested(senderID);
         }
-        int[] senderBitField = peerBitField.get(senderID);
-        senderBitField[curIndex] = 1;
+        ServerThreadPool.getStatusMap().updateBitField(senderID, curIndex);
+
+        //check if has interested piece
+        boolean interest = false;
+        for(boolean interestPiece : curBitField){
+            if(interestPiece){
+                interest = true;
+                break;
+            }
+        }
+        if(!interest){
+            for(int peerID : ServerThreadPool.getStatusMap().getPeerSet()){
+                if(peerID == this.peerID)
+                    continue;
+                sendNotInterested(peerID);
+            }
+        }
+
+
+
+//        int[] senderBitField = peerBitField.get(senderID);
+//        senderBitField[curIndex] = 1;
     }
 
     // send bit field
-    public static void sendBitfield(Client client, int receiverID){
+    public void sendBitfield(int receiverID) throws Exception {
         //check if bitfield is empty, if so, do not send bitfield
         //if bitfield is not empty, send bitfield
-        if(!peerBitField.containsKey(client.peerID)){
-            int[] defaultBitField = new int[numOfPiece];
-            Arrays.fill(defaultBitField, 0);
-            peerBitField.put(client.peerID, defaultBitField);
-        }else{
-            int[] curBitField = peerBitField.get(client.peerID);
-            String strBitField = Arrays.toString(curBitField).replaceAll("\\[|\\]|,|\\s", "");
+        boolean[] curBitField = ServerThreadPool.getStatusMap().getBitField(this.peerID);
+        if(!bitFieldIsEmpty(curBitField)){
+            String strBitField = bitFieldToString(curBitField);
             P2PMessage bitField = new P2PMessage(P2PMessage.msgType.bitField, strBitField);
             byte[] actualMessage = bitField.messageToBytes();
-            client.sendMessage(actualMessage, receiverID);
+            //client.sendMessage(actualMessage, receiverID);
         }
+//        if(!peerBitField.containsKey(this.peerID)){
+//            int[] defaultBitField = new int[numOfPiece];
+//            Arrays.fill(defaultBitField, 0);
+//            peerBitField.put(this.peerID, defaultBitField);
+//        }else{
+//            int[] curBitField = peerBitField.get(this.peerID);
+//            String strBitField = Arrays.toString(curBitField).replaceAll("\\[|\\]|,|\\s", "");
+//            P2PMessage bitField = new P2PMessage(P2PMessage.msgType.bitField, strBitField);
+//            byte[] actualMessage = bitField.messageToBytes();
+//            //client.sendMessage(actualMessage, receiverID);
+//        }
     }
 
 
-    // receive bit field
-    public static void receiveBitField(Client client, P2PMessage msg, int senderID){
-        //get bitField(string) and transfer to int array
-        String bitField = msg.getBitField();
-        int[] receivedBitField = new int[bitField.length()];
-        for(int i = 0; i < bitField.length(); i++){
-            receivedBitField[i] = bitField.charAt(i) - '0';
+    //check if a bitField is empty
+    public boolean bitFieldIsEmpty(boolean[] bitField){
+        for (boolean b : bitField) {
+            if (b) {
+                return false;
+            }
         }
+        return true;
+    }
 
-        int curPeerID = client.peerID;
+    //convert bitField to string
+    public String bitFieldToString(boolean[] bitField){
+        StringBuilder sb = new StringBuilder();
+        for(boolean hasPiece : bitField){
+            if(hasPiece){
+                sb.append("1");
+            }else{
+                sb.append("0");
+            }
+        }
+        return sb.toString();
+    }
+
+
+
+    // receive bit field
+    public void receiveBitField(P2PMessage msg, int senderID) throws Exception {
+        //get bitField(string) and transfer to boolean array
+        String strbitField = msg.getBitField();
+        boolean[] receivedBitField = new boolean[strbitField.length()];
+        for(int i = 0; i < strbitField.length(); i++){
+            receivedBitField[i] = strbitField.charAt(i) != '0';
+        }
         // check peeBitField
         // compare current bit field and received bit field
         // if current bit field has all the piece that in the received bit field, send not interested
         // else send interest message
-        if(peerBitField.containsKey(curPeerID)){
-            int[] curBitField = peerBitField.get(curPeerID);
-            boolean interested = false;
-            for(int i = 0; i < numOfPiece; i++){
-                if(curBitField[i] == 0 && receivedBitField[i] == 1){
-                    interested = true;
-                    break;
-                }
+        boolean[] curBitField = ServerThreadPool.getStatusMap().getBitField(this.peerID);
+        boolean interest = false;
+        for(int i = 0; i < curBitField.length; i++){
+            if(receivedBitField[i] && !curBitField[i]){
+                interest = true;
+                break;
             }
-            if(interested){
-                sendInterested(client, senderID);
-            }else{
-                sendNotInterested(client, senderID);
-            }
+        }
+        if(interest){
+            sendInterested(senderID);
         }else{
-            int[] defaultBitField = new int[msg.getNumOfPiece()];
-            Arrays.fill(defaultBitField, 0);
-            peerBitField.put(curPeerID, defaultBitField);
+            sendNotInterested(senderID);
         }
     }
 
 
     // send request
-    public static void sendRequest(Client client, int index, int receiverID){
+    public void sendRequest(int index, int receiverID){
         P2PMessage request = new P2PMessage(P2PMessage.msgType.request, index);
         byte[] actualMessage = request.messageToBytes();
-        client.sendMessage(actualMessage, receiverID);
+        //client.sendMessage(actualMessage, receiverID);
     }
 
 
     // receive request
     // After receiving the request, send the piece to the peer
-    public static void receiveRequest(P2PMessage msg, Client client, int senderID){
-        if (unchokepeers.get(client.peerID).contains(senderID)){        //check unchokelist
-            sendPiece(client, msg.getIndex(), senderID);
+    public void receiveRequest(P2PMessage msg, int senderID){
+        //TODO get unchoke peer set
+        if (unchokepeers.get(this.peerID).contains(senderID)){        //check unchokelist
+            sendPiece(msg.getIndex(), senderID);
         }
     }
 
     // send piece
     // get piece from the file
-    public static void sendPiece(Client client, int index, int receiverID){
+    public void sendPiece(int index, int receiverID){
         FileHandler fh = new FileHandler();
-        byte[] payload = fh.read(index, client.peerID);
+        byte[] payload = fh.read(index, this.peerID);
         P2PMessage piece = new P2PMessage(P2PMessage.msgType.piece, index, payload);
         byte[] actualMessage = piece.messageToBytes();
-        client.sendMessage(actualMessage, receiverID);
+        //client.sendMessage(actualMessage, receiverID);
     }
 
 
@@ -186,35 +254,49 @@ public class P2PMessageHandler {
     // receive piece
     // check if the client has this piece of file
     // If so, download this data and save it to its file
-    public static void receivePiece(Client client, P2PMessage msg, int senderID){
+    public void receivePiece(P2PMessage msg, int senderID) throws Exception {
         FileHandler fh = new FileHandler();
         int curIndex = msg.getIndex();
         byte[] curPayload = msg.getPayload();
-        fh.write(curIndex, curPayload, client.peerID);
+        fh.write(curIndex, curPayload, this.peerID);
+        //downloadingNum[this.peerID][senderID]++;
 
-        //update bitfield
-        int[] curBitField = peerBitField.get(client.peerID);
-        if(curBitField[curIndex] == 0){
-            curBitField[curIndex] = 1;
-            downloadingNum[client.peerID][senderID]++;
+        //randomly select a not-have piece and send request
+        boolean[] curBitField = ServerThreadPool.getStatusMap().getBitField(this.peerID);
+        boolean[] senderBitField = ServerThreadPool.getStatusMap().getBitField(senderID);
+        Set<Integer> notHave = new HashSet<>();
+        for(int i = 0; i < curBitField.length; i++){
+            if(senderBitField[i] && !curBitField[i]){
+                notHave.add(i);
+            }
+        }
+        notHave.remove(curIndex);
+        if(notHave.size() > 0){
+            int target = r.nextInt(notHave.size());
+            int i = 0;
+            for(int index : notHave){
+                if(target == i){
+                    sendRequest(index, senderID);
+                    break;
+                }
+                i++;
+            }
         }
 
-        //TODO send another request message to the sender
+        //TODO update requested
 
-        //randomly select peers to send have message
-        //nextint generate a random integer from 0 to n - 1. so receiverID add one
-        Random r = new Random();
-        int receiverID = r.nextInt(peerBitField.size()) + 1;
-        while(receiverID == senderID || receiverID == client.peerID){
-            receiverID = r.nextInt(peerBitField.size()) + 1;
+        //select peers that don't have this piece and send have message
+        for(int peerID : ServerThreadPool.getStatusMap().getPeerSet()){
+            if(peerID == senderID || peerID == this.peerID)
+                continue;
+            if(!ServerThreadPool.getStatusMap().getBitField(peerID)[curIndex])
+                sendHave(curIndex, peerID);
         }
-        sendHave(client, curIndex, receiverID);
     }
 
 
     public static void main(String[] args){
-        String str = "10001000";
-        System.out.println();
+
     }
 
 }
