@@ -28,7 +28,7 @@ public class Logger{
 	//Properties from configuration file
 	private String fileDir;
 	private StringBuffer sb;
-	private String prefix = null;
+	private String prefix = "";
 	
 	/**
 	 * Default constructor

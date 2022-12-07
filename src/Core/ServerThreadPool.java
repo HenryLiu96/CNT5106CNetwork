@@ -47,22 +47,6 @@ public class ServerThreadPool {
 		file_size = config.getInt("FileSize");
 		piece_size = config.getInt("PieceSize");
 	}
-
-	public int getXXXX() {
-		return 0;
-	}
-	/**
-	 * Pick preferred 
-	 */
-	public static void pickPrefer() {
-		//TODO
-	}
-	/**
-	 * Choose optimistically unchoke
-	 */
-	public static void pickOpt() {
-		//TODO
-	}
 	
 	//Ask the listen thread to stop listening 
 	public static void shutdown() {
@@ -89,7 +73,12 @@ public class ServerThreadPool {
 		logger.setPrefix("ServerThreadPool");
 		ServerSocket welcomeSocket = new ServerSocket(DEFAULT_WEL_PORT);
 		ExecutorService ServerThreadPool = Executors.newFixedThreadPool(THREAD_NUM);
-
+		
+		SleepPNTimer pnTimerService = new SleepPNTimer(p);
+		ServerThreadPool.execute(pnTimerService);
+		SleepOptTimer optTimerService = new SleepOptTimer(m);
+		ServerThreadPool.execute(optTimerService);
+		
 		logger.append("ServerThreadPool established.");
 
 		try {
