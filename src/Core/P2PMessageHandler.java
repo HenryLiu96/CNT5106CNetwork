@@ -213,8 +213,7 @@ public class P2PMessageHandler {
 
 
     public static void main(String[] args){
-        String str = "10001000";
-        System.out.println();
+
     }
 
 }
