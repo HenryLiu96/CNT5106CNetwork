@@ -137,6 +137,10 @@ public class PeerStatusMap {
 		}
 	}
 	
+	synchronized public int getOptUnchokedNeighbor() {
+		return this.optUnchokedNeighbor;
+	}
+	
 	synchronized public PriorityQueue<int[]> genPriorityQueue() {
 		Map<Integer, Integer> downloadTimes = new HashMap<>();
 		for (int i = 0; i < pieceNum; i++) {

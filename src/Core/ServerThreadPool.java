@@ -14,6 +14,7 @@ public class ServerThreadPool {
 	private static int THREAD_NUM = 4; 		// Maximum worker thread in the pool
 	private static boolean listen = true;	// Control flag for listen thread
 	private static int DEFAULT_WEL_PORT = 8080; //Assign 8080 to be default welcome port
+	private static String myPeerID = "10086";
 	
 	public static int k = 4;				// Number of Preferred neighbor
 	public static int p = 6;				// Number of sec before repicking PN
@@ -74,6 +75,7 @@ public class ServerThreadPool {
 		ServerSocket welcomeSocket = new ServerSocket(DEFAULT_WEL_PORT);
 		ExecutorService ServerThreadPool = Executors.newFixedThreadPool(THREAD_NUM);
 		
+		System.out.println(String.format("p is %d, m is %d", p, m));
 		SleepPNTimer pnTimerService = new SleepPNTimer(p);
 		ServerThreadPool.execute(pnTimerService);
 		SleepOptTimer optTimerService = new SleepOptTimer(m);
@@ -101,5 +103,10 @@ public class ServerThreadPool {
 			ServerThreadPool.shutdownNow();
 			welcomeSocket.close();
 		}
+	}
+	
+	
+	public static String getPeerID() {
+		return myPeerID;
 	}
 }

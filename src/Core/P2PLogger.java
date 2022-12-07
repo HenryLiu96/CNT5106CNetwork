@@ -40,7 +40,8 @@ public class P2PLogger extends Logger {
 			this.setfilePath(this.fileDir);
 			if(VERBOSE) 
 				System.out.println("P2P Logger initialized with configuration file!");
-		}catch(Exception e) {
+		}
+		catch(Exception e) {
 			// If configuration file is not available
 			this.fileDir = workingDir+DEFAULT_DIR;
 			this.setfilePath(this.fileDir);
