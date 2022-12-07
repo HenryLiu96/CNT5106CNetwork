@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
@@ -44,7 +45,7 @@ public class Config {
 			}
 			this.prop = new Properties();
 			File f = new File(configFilePath);
-			
+	
 			// To examine if target is a solid file
 			if(f.exists() && f.isFile()) {
 				FileInputStream fis = new FileInputStream(f);
@@ -56,6 +57,22 @@ public class Config {
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Returns the entry set of the hashMap
+	 * @return
+	 */
+	public Set<Entry<Object, Object>> entrySet(){
+		return this.prop.entrySet();
+	}
+	
+	/**
+	 * Returns the entry set of the hashMap
+	 * @return
+	 */
+	public Set<Object> keySet(){
+		return this.prop.keySet();
 	}
 	
 	/**

@@ -8,10 +8,13 @@ import java.util.regex.Pattern;
  *
  */
 public class HandShakeMessage {
-	String msg;
-	String header;
-	String peerID;
+	private String msg;
+	private String header;
+	private String peerID;
 	
+	private static int length = 32;
+	
+	private final static String ERR_MSG_BYTELEN = "Cannot compose ";
 	//Constructor
 	public HandShakeMessage(String handshakeReq) {
 		// TODO Implement RegEx format check and initialize the fields
@@ -20,6 +23,22 @@ public class HandShakeMessage {
 		this.msg = handshakeReq;
 		this.header = msg.substring(0,18);
 		this.peerID = msg.substring(28);
+	}
+	
+	public HandShakeMessage(byte[] handShakeBytes) throws Exception {
+		if (handShakeBytes.length == length) {
+			String handShake = new String(handShakeBytes);
+			this.msg = handShake;
+			this.header = msg.substring(0,18);
+			this.peerID = msg.substring(28);
+		}
+		else {
+			throw new Exception(ERR_MSG_BYTELEN);
+		}
+	}
+	
+	public static int getLength() {
+		return length;
 	}
 	
 	public boolean headerCheck() {
@@ -41,9 +60,17 @@ public class HandShakeMessage {
 	public boolean permitToConnect() {
 		return headerCheck() && peerIDCheck();
 	}
+	
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		HandShakeMessage hm = new HandShakeMessage("P2PFILESHARINGPROJ\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u00001024");
+		byte[] handshakeBytes = {'P','2','P','F','I','L','E','S','H','A','R','I'
+				,'N','G','P','R','O','J','\u0000','\u0000','\u0000','\u0000',
+				'\u0000','\u0000','\u0000','\u0000','\u0000','\u0000',
+				'1','0','2','4'};
+		
 		System.out.println(hm.peerIDCheck());
+		System.out.println("Fuck final test");
+		System.out.println(new HandShakeMessage(handshakeBytes).msg);
 	}
 }
