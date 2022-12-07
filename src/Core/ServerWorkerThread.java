@@ -20,7 +20,7 @@ public class ServerWorkerThread implements Runnable{
 			this.connectionSocket = connectionSocket;
 		}else {
 			throw new IOException("IOExcepion: Assigned connection socket "
-														+ "doesn't exist.");
+										+ "doesn't exist.");
 		}
 	}
 	
@@ -29,11 +29,19 @@ public class ServerWorkerThread implements Runnable{
 		this.kill = true;
 	}
 	
+	// Send handshake msg
+	public void sendHandShake(DataOutputStream outStream) throws IOException {
+		String handShakeMsg = new HandShakeMessage(ServerThreadPool.getPeerID())
+																	.toString();
+		outStream.writeBytes(handShakeMsg);
+	}
+	
 	// Wait until handshake
-	public boolean handshake(InputStream inStream) {
+	public boolean getHandshake(InputStream inStream) {
 		try {
-			this.logger.setPeerInfo("DEMOPEER1");//TODO Read this client peer info and set
-			this.logger.append(String.format("Awaiting handShake info from Peer."));		//TODO Read opposite peer and set
+			this.logger.setPeerInfo(ServerThreadPool.getPeerID());
+			this.logger.append(String.format("Awaiting handShake info from Peer."));		
+			//TODO Read opposite peer and set
 			while(inStream.available() < HandShakeMessage.getLength()) {
 				
 			}
@@ -42,8 +50,7 @@ public class ServerWorkerThread implements Runnable{
 			//TODO update peer 
 			
 			// Check handShakeByte encoded to be String
-			
-			
+
 			
 			return true;
 		} catch (IOException e) {
@@ -64,11 +71,15 @@ public class ServerWorkerThread implements Runnable{
 		}
 		try {
 			InputStream instream = connectionSocket.getInputStream();
-			
 			InputStreamReader InputFromClient = new InputStreamReader(
 											connectionSocket.getInputStream());
 			BufferedReader connectionInStream = new BufferedReader(InputFromClient);
 			String handShakeReq = connectionInStream.readLine();
+			//Create output stream for response
+			OutputStream output = connectionSocket.getOutputStream();
+			DataOutputStream writeToClientStream = new DataOutputStream(output);
+			//SendOutput
+			sendHandShake(writeToClientStream);
 			
 			//Encapsulate handshake message
 			HandShakeMessage hsm = new HandShakeMessage(handShakeReq);
@@ -78,12 +89,10 @@ public class ServerWorkerThread implements Runnable{
 				throw new IOException("Not Authorized: Server closed the connection.");
 			}
 			do {
-				
+				// TODO ReadInfo
 			}while(!kill);
 			
-			//Create output stream for response
-			OutputStream output = connectionSocket.getOutputStream();
-			DataOutputStream writeToClientStream = new DataOutputStream(output);
+			
 			//Write back actual message
 			writeToClientStream.writeBytes("ACTUAL MESSAGE");
 		} catch (IOException e) {
@@ -96,4 +105,5 @@ public class ServerWorkerThread implements Runnable{
 			}
 		}
 	}
+	
 }
