@@ -14,13 +14,15 @@ public class ServerThreadPool {
 	private static int THREAD_NUM = 4; 		// Maximum worker thread in the pool
 	private static boolean listen = true;	// Control flag for listen thread
 	private static int DEFAULT_WEL_PORT = 8080; //Assign 8080 to be default welcome port
-
+	
 	public static int k = 4;				// Number of Preferred neighbor
 	public static int p = 6;				// Number of sec before repicking PN
 	public static int m = 12;				// Number of sec before repicking optimistic unchoking neighbor
 	public static String file_name = "f";	// Name of the file
 	public static int file_size = 100;		// File size
 	public static int piece_size = 10;		// Piece size
+
+	private static PeerStatusMap statusMap = null;
 
 	/**Initialization of Thread pool
 		1. Read k(Number of Preferred neighbors) from configuration file 
@@ -32,6 +34,8 @@ public class ServerThreadPool {
 	 * @throws Exception 
 	*/
 	public static void init() throws Exception {
+		statusMap = new PeerStatusMap();
+		
 		String cfgPath = "./Config/common.cfg";
 		Config config  =  new Config(cfgPath);
 
@@ -65,9 +69,14 @@ public class ServerThreadPool {
 		listen = false;
 	}
 	
+	public static PeerStatusMap getStatusMap() {
+		return statusMap;
+	}
+	
 	public static void main(String[] args) throws Exception {
 		// read configuration file: common.cfg and save parameters (tested)
 		init();
+		
 		// read peer information file: PeerInfo.cfg and save peer info to list (tested)
 		PeerInfoHandler pif = new PeerInfoHandler();
 		FileHandler fh = new FileHandler();
@@ -76,33 +85,32 @@ public class ServerThreadPool {
 			fh.setFile(peerInfo);
 		}
 
+		P2PLogger logger = new P2PLogger();
+		logger.setPrefix("ServerThreadPool");
+		ServerSocket welcomeSocket = new ServerSocket(DEFAULT_WEL_PORT);
+		ExecutorService ServerThreadPool = Executors.newFixedThreadPool(THREAD_NUM);
 
-//		P2PLogger logger = new P2PLogger();
-//		logger.setPrefix("ServerThreadPool");
-//		ServerSocket welcomeSocket = new ServerSocket(DEFAULT_WEL_PORT);
-//		ExecutorService ServerThreadPool = Executors.newFixedThreadPool(THREAD_NUM);
-//
-//		logger.append("ServerThreadPool established.");
-//
-//		try {
-//			while(listen) {
-//				try {
-//					// Main thread listen for connection request to welcome socket
-//					logger.append("Main socket ready to listen on welcome socket.");
-//					logger.log();
-//					Socket connectionSocket = welcomeSocket.accept();
-//					// When actual connection is established, let connection socket handle
-//					Runnable workerThread = new ServerWorkerThread(connectionSocket);
-//					ServerThreadPool.execute(workerThread);
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		}
-//		//Ensure every thread and welcome socket is closed.
-//		finally {
-//			ServerThreadPool.shutdownNow();
-//			welcomeSocket.close();
-//		}
+		logger.append("ServerThreadPool established.");
+
+		try {
+			while(listen) {
+				try {
+					// Main thread listen for connection request to welcome socket
+					logger.append("Main socket ready to listen on welcome socket.");
+					logger.log();
+					Socket connectionSocket = welcomeSocket.accept();
+					// When actual connection is established, let connection socket handle
+					Runnable workerThread = new ServerWorkerThread(connectionSocket);
+					ServerThreadPool.execute(workerThread);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		//Ensure every thread and welcome socket is closed.
+		finally {
+			ServerThreadPool.shutdownNow();
+			welcomeSocket.close();
+		}
 	}
 }
