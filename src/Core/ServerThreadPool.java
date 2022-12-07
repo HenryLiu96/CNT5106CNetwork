@@ -13,9 +13,9 @@ public class ServerThreadPool {
 	private static int THREAD_NUM = 4; 		// Maximum worker thread in the pool
 	private static boolean listen = true;	// Control flag for listen thread
 	private static int DEFAULT_WEL_PORT = 8080; //Assign 8080 to be default welcome port
-	private static int k = 4;				// Number of Preferred neighbor
-	private static int p = 6;				// Number of sec before repicking PN
-	private static int m = 12;				// Number of 
+	private static int k = 4;				// Default num of Preferred neighbor
+	private static int p = 6;				// Default Interval repick PN
+	private static int m = 12;				// Default Interval repick 
 	
 	/**Initialization of Thread pool
 		1. Read k(Number of Preferred neighbors) from configuration file 
@@ -27,8 +27,11 @@ public class ServerThreadPool {
 		String workingDir = Paths.get("").toAbsolutePath().toString();
 		String cfgPath = workingDir.concat(Routes.CONFIG_DIR).concat(Routes.COMMON_CFG);
 		Config config  =  new Config(cfgPath);
+		// Set num of preferred neighbor by configuration file
 		k = config.getInt("NumberOfPreferedNeighbours");
+		// Set Unchoking Interval by configuration file
 		p = config.getInt("UnchokingInterval");
+		// Set optimistic unchoking interval by configuration file
 		m = config.getInt("OptimisticUnchokingInterval");
 	}
 	
