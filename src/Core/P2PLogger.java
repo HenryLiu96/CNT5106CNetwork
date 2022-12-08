@@ -2,8 +2,6 @@ package Core;
 
 import java.io.File;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 import Util.Config;
 import Util.Logger;
@@ -42,7 +40,8 @@ public class P2PLogger extends Logger {
 			this.setfilePath(this.fileDir);
 			if(VERBOSE) 
 				System.out.println("P2P Logger initialized with configuration file!");
-		}catch(Exception e) {
+		}
+		catch(Exception e) {
 			// If configuration file is not available
 			this.fileDir = workingDir+DEFAULT_DIR;
 			this.setfilePath(this.fileDir);
@@ -67,7 +66,13 @@ public class P2PLogger extends Logger {
 		//TODO check if peerID is in legal form
 		this.setPrefix(peerID);
 	}
-	
+
+
+	//TODO add message to log
+	public void addMessage(int peerID, String message){
+
+	}
+
 	public static void main(String[] args) throws Exception {
 //		List<Integer> a = new ArrayList<>();
 		String workingDir = Paths.get("").toAbsolutePath().toString();

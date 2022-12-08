@@ -2,7 +2,9 @@ package Util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
@@ -43,18 +45,37 @@ public class Config {
 			}
 			this.prop = new Properties();
 			File f = new File(configFilePath);
+			System.out.println(f.getAbsolutePath());
 			
 			// To examine if target is a solid file
 			if(f.exists() && f.isFile()) {
+				System.out.println(f.toString());
 				FileInputStream fis = new FileInputStream(f);
 				prop.load(fis);
 				initialized = true;
 			} else {
+				System.out.println(f.toString());
 				throw new Exception(ERR_FILE_NOT_FOUND);
 			}
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Returns the entry set of the hashMap
+	 * @return
+	 */
+	public Set<Entry<Object, Object>> entrySet(){
+		return this.prop.entrySet();
+	}
+	
+	/**
+	 * Returns the entry set of the hashMap
+	 * @return
+	 */
+	public Set<Object> keySet(){
+		return this.prop.keySet();
 	}
 	
 	/**
@@ -138,12 +159,12 @@ public class Config {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		Config c = new Config("C:\\Users\\Tianhui Liu\\eclipse-workspace"
-							+ "\\CNT5106CNetwork\\src\\Core\\common.cfg");
+		Config c = new Config("./Config/common.cfg");
 		for(Object O: c.prop.keySet()) {
 			System.out.println((String)O);
 		}
 		System.out.println(c.getInt("PieceSize"));
 		System.out.println(c.getString("Hime"));
+
 	}
 }
