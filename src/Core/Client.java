@@ -242,7 +242,7 @@ public class Client {
 		{
 			throw new Exception(ERR_STREAM_NOT_READY);
 		}
-		this.objOut.write(msg.toBytes());
+//		this.objOut.write(msg.toBytes());
 	}
 	
 	/**

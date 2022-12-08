@@ -9,5 +9,5 @@ import java.nio.file.Paths;
  */
 public class Routes {
 	public static final String CONFIG_DIR = "\\Config";
-	public  static final String COMMON_CFG = "\\common.cfg";
+	public static final String COMMON_CFG = "\\common.cfg";
 }

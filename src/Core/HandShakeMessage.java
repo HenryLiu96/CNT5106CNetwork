@@ -14,7 +14,12 @@ public class HandShakeMessage {
 	
 	private static int length = 32;
 	
+	private final static String HANDSHAKE_PAT = "P2PFILESHARINGPROJ"
+			+ "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+			+ "%s";
 	private final static String ERR_MSG_BYTELEN = "Cannot compose ";
+	
+	
 	//Constructor
 	public HandShakeMessage(String handshakeReq) {
 		// TODO Implement RegEx format check and initialize the fields
@@ -35,6 +40,11 @@ public class HandShakeMessage {
 		else {
 			throw new Exception(ERR_MSG_BYTELEN);
 		}
+	}
+	
+	public HandShakeMessage(int peerID) {
+		this.peerID = String.valueOf(peerID);
+		this.msg = String.format(HANDSHAKE_PAT, this.peerID);
 	}
 	
 	public static int getLength() {
@@ -59,6 +69,10 @@ public class HandShakeMessage {
 	
 	public boolean permitToConnect() {
 		return headerCheck() && peerIDCheck();
+	}
+	
+	public String toString() {
+		return this.msg;
 	}
 	
 

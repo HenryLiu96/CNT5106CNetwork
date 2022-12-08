@@ -43,7 +43,7 @@ public class ServerWorkerThread implements Runnable{
 			this.logger.append(String.format("Awaiting handShake info from Peer."));		
 			//TODO Read opposite peer and set
 			while(inStream.available() < HandShakeMessage.getLength()) {
-				
+				//Wait and do nothing
 			}
 			byte[] handShakeByte = new byte[HandShakeMessage.getLength()];
 			inStream.read(handShakeByte);

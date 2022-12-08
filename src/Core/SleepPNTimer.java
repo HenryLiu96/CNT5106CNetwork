@@ -10,7 +10,6 @@ public class SleepPNTimer implements Runnable {
 	private int interval;
 	private PeerStatusMap statusMap;
 	private int peerID;
-	
 
 	P2PLogger logger;
 

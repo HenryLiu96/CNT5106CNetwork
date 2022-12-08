@@ -68,13 +68,13 @@ public class ServerThreadPool {
 		// read configuration file: common.cfg and save parameters (tested)
 		init();
 		
-		// read peer information file: PeerInfo.cfg and save peer info to list (tested)
-		PeerInfoHandler pif = new PeerInfoHandler();
-		FileHandler fh = new FileHandler();
-		for (PeerInfo peerInfo : pif.getPeerInfoList()) {
-			System.out.println("connect to " + peerInfo.getHost() + " " + peerInfo.getPort());
-			fh.setFile(peerInfo);
-		}
+//		// read peer information file: PeerInfo.cfg and save peer info to list (tested)
+//		PeerInfoHandler pif = new PeerInfoHandler();
+//		FileHandler fh = new FileHandler();
+//		for (PeerInfo peerInfo : pif.getPeerInfoList()) {
+//			System.out.println("connect to " + peerInfo.getHost() + " " + peerInfo.getPort());
+//			fh.setFile(peerInfo);
+//		}
 
 		P2PLogger logger = new P2PLogger();
 		logger.setPrefix("ServerThreadPool");
