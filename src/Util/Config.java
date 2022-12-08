@@ -45,13 +45,16 @@ public class Config {
 			}
 			this.prop = new Properties();
 			File f = new File(configFilePath);
-	
+			System.out.println(f.getAbsolutePath());
+			
 			// To examine if target is a solid file
 			if(f.exists() && f.isFile()) {
+				System.out.println(f.toString());
 				FileInputStream fis = new FileInputStream(f);
 				prop.load(fis);
 				initialized = true;
 			} else {
+				System.out.println(f.toString());
 				throw new Exception(ERR_FILE_NOT_FOUND);
 			}
 		}catch(Exception e) {
