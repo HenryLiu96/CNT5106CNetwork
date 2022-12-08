@@ -59,6 +59,12 @@ public class ServerThreadPool {
 	}
 	
 	public static void main(String[] args) throws Exception {
+		try {			
+			System.out.println("You have logged in as Peer: "+args[0]);
+			myPeerID = args[0];
+		}catch(Exception e){
+			throw new Exception("PeerID not input.");
+		}
 		// read configuration file: common.cfg and save parameters (tested)
 		init();
 		
@@ -93,8 +99,8 @@ public class ServerThreadPool {
 					// When actual connection is established, let connection socket handle
 					Runnable workerThread = new ServerWorkerThread(connectionSocket);
 					ServerThreadPool.execute(workerThread);
-				} catch (IOException e) {
-					e.printStackTrace();
+				} catch (IOException IOe) {
+					IOe.printStackTrace();
 				}
 			}
 		}
