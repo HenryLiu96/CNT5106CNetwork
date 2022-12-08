@@ -14,7 +14,7 @@ import Util.Config;
 
 public class PeerStatusMap {
 	private static String configPath = "./Config/PeerInfo.cfg";
-	private static String comConfigPath = "./Config/common.cfg";
+	private static String comConfigPath = "./Config/Common.cfg";
 	private static int pieceNum = -1;
 	
 	private HashMap<String, boolean[]> peerBitMap = new HashMap<>();
