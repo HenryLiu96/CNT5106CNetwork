@@ -37,7 +37,7 @@ public class ServerThreadPool {
 	public static void init() throws Exception {
 		statusMap = new PeerStatusMap();
 		
-		String cfgPath = "./Config/common.cfg";
+		String cfgPath = "./Config/Common.cfg";
 		Config config  =  new Config(cfgPath);
 
 		k = config.getInt("NumberOfPreferredNeighbors");
